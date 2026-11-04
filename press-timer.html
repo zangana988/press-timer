@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Press Timer">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1faa59">
+<title>Press Timer</title>
+<style>
+:root{--bg:#f5f5f2;--fg:#17171a;--muted:#707078;--track:#e1e1dc;--bar:#2f6fed;--btn:#2f6fed;--btnfg:#fff;--card:#fff;--line:#e4e4df;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121214;--fg:#f3f3f1;--muted:#9a9aa2;--track:#2a2a2e;--bar:#5b8cff;--btn:#5b8cff;--btnfg:#0b0b0c;--card:#1c1c20;--line:#2c2c31;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121214;--fg:#f3f3f1;--muted:#9a9aa2;--track:#2a2a2e;--bar:#5b8cff;--btn:#5b8cff;--btnfg:#0b0b0c;--card:#1c1c20;--line:#2c2c31;color-scheme:dark}
+body.run,body.paused,body.done{--fg:#fff;--muted:rgba(255,255,255,.85);--track:rgba(255,255,255,.3);--bar:#fff;--btn:#fff;--btnfg:#111;--line:rgba(255,255,255,.3)}
+body.run{--bg:#1faa59}body.paused{--bg:#d98a1f}body.done{--bg:#d93025}
+html,body{height:100%;margin:0;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input{-webkit-user-select:text;user-select:text}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;transition:background .3s;-webkit-tap-highlight-color:transparent}
+header{width:100%;max-width:420px;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;box-sizing:border-box}
+header b{font-size:1.05rem;letter-spacing:.02em}
+.icon{background:none;border:0;color:var(--fg);padding:8px;border-radius:50%;cursor:pointer;line-height:0}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;width:100%;max-width:420px;padding:0 20px 24px;box-sizing:border-box}
+.ringwrap{position:relative;width:min(78vw,300px);aspect-ratio:1}
+svg.ring{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:10;stroke-linecap:round}
+.ring .t{stroke:var(--track)}
+.ring .p{stroke:var(--bar);stroke-dasharray:691.15;stroke-dashoffset:0;transition:stroke-dashoffset .25s linear}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.time{font-size:4.2rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.step{color:var(--muted);font-size:.95rem}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.primary{font:inherit;font-size:1.25rem;font-weight:600;border:0;border-radius:18px;padding:20px;width:100%;background:var(--btn);color:var(--btnfg);cursor:pointer}
+.primary:active{transform:scale(.98)}
+.row{display:flex;gap:12px;width:100%}
+.ghost{flex:1;font:inherit;font-size:1rem;font-weight:500;padding:14px;border-radius:14px;background:transparent;color:var(--fg);border:1px solid var(--line);cursor:pointer}
+.sheet{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+.sheet.open{display:flex}
+.panel{width:100%;max-width:420px;padding:0 20px 32px;box-sizing:border-box}
+h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:22px 0 10px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.srow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:0}
+.srow .n{color:var(--muted);width:22px;font-variant-numeric:tabular-nums}
+.srow .grow{flex:1}
+.srow input[type=number]{width:56px;font:inherit;font-size:1.05rem;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);text-align:center}
+.srow .u{color:var(--muted);font-size:.9rem}
+.del{background:none;border:0;color:#d93025;font-size:1.3rem;cursor:pointer;padding:4px 8px}
+.add{width:100%;margin-top:10px}
+.tog{appearance:none;width:48px;height:28px;border-radius:14px;background:var(--track);position:relative;cursor:pointer;border:0;flex:none}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s}
+.tog:checked{background:#1faa59}.tog:checked::after{left:23px}
+.hint{color:var(--muted);font-size:.8rem;margin:8px 4px 0}
+</style>
+</head>
+<body>
+<header><b>Press Timer</b>
+<button class="icon" id="gear" aria-label="Settings"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></header>
+<main>
+<div class="ringwrap">
+<svg class="ring" viewBox="0 0 240 240"><circle class="t" cx="120" cy="120" r="110"/><circle class="p" id="arc" cx="120" cy="120" r="110"/></svg>
+<div class="center"><div class="time" id="time">0:15</div><div class="step" id="step"></div></div>
+</div>
+<div class="chips" id="chips"></div>
+<button class="primary" id="go">Start</button>
+<div class="row"><button class="ghost" id="reset">Reset</button><button class="ghost" id="skip">Next step</button></div>
+</main>
+
+<div class="sheet" id="sheet"><div class="panel">
+<header style="padding:16px 0"><b>Settings</b><button class="icon" id="close" style="font-size:1rem;font-weight:600;padding:8px 4px">Done</button></header>
+<h2>Steps</h2>
+<div class="card" id="rows"></div>
+<button class="ghost add" id="add">+ Add step</button>
+<h2>Alerts</h2>
+<div class="card">
+<label class="srow"><span class="grow">Sound</span><input type="checkbox" class="tog" id="sound"></label>
+<label class="srow"><span class="grow">Vibration</span><input type="checkbox" class="tog" id="vibe"></label>
+<label class="srow"><span class="grow">Auto-start next step</span><input type="checkbox" class="tog" id="auto"></label>
+</div>
+<p class="hint">Vibration works on Android. iPhone Safari does not support it, so use sound there.</p>
+</div></div>
+
+<script>
+var $=function(id){return document.getElementById(id)};
+(function(){try{var c=document.createElement("canvas");c.width=c.height=180;var x=c.getContext("2d");x.fillStyle="#1faa59";x.fillRect(0,0,180,180);x.lineWidth=14;x.lineCap="round";x.strokeStyle="rgba(255,255,255,.35)";x.beginPath();x.arc(90,90,55,0,7);x.stroke();x.strokeStyle="#fff";x.beginPath();x.arc(90,90,55,-1.5708,3.1416);x.stroke();var l=document.createElement("link");l.rel="apple-touch-icon";l.href=c.toDataURL("image/png");document.head.appendChild(l)}catch(e){}})();
+var DEF={steps:[15,15,120],sound:true,vibe:true,auto:false};
+function load(){try{var v=JSON.parse(localStorage.getItem("pt"));if(v&&v.steps&&v.steps.length)return v}catch(e){}return JSON.parse(JSON.stringify(DEF))}
+function save(){try{localStorage.setItem("pt",JSON.stringify(S))}catch(e){}}
+var S=load(),cur=-1,state="idle",total=0,left=0,end=0,timer=null,ctx=null,lock=null,setOpen=false,C=691.15;
+function fmt(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function nextIdx(){return (cur+1)%S.steps.length}
+function audio(){try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==="suspended")ctx.resume()}catch(e){}}
+function beep(){if(S.sound&&ctx){try{for(var k=0;k<3;k++){var o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+k*.3;o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.22);o.start(t);o.stop(t+.25)}}catch(e){}}
+if(S.vibe){try{navigator.vibrate&&navigator.vibrate([250,120,250,120,250])}catch(e){}}}
+async function wake(){try{if(navigator.wakeLock&&!lock){lock=await navigator.wakeLock.request("screen");lock.addEventListener("release",function(){lock=null})}}catch(e){}}
+function unwake(){try{lock&&lock.release();lock=null}catch(e){}}
+function render(){
+document.body.className=setOpen?"":(state==="idle"?"":state);
+var n=S.steps.length,k=state==="idle"?0:cur,secs=state==="idle"?S.steps[0]:left;
+$("time").textContent=fmt(secs);
+var p=state==="idle"?1:(total?Math.max(0,left)/total:0);
+$("arc").style.strokeDashoffset=C*(1-p);
+var lab={idle:"Ready",run:"Counting",paused:"Paused",done:"Finished"}[state];
+$("step").textContent=lab+" · Step "+(k+1)+" of "+n;
+$("go").textContent=state==="idle"?"Start "+fmt(S.steps[0]):state==="run"?"Pause":state==="paused"?"Resume":"Start "+fmt(S.steps[nextIdx()]);
+$("chips").innerHTML=S.steps.map(function(s,i){return '<span class="chip'+(state!=="idle"&&i===cur?" on":"")+'">'+fmt(s)+'</span>'}).join("");
+}
+function start(i){audio();clearInterval(timer);cur=i;total=S.steps[i];left=total;end=Date.now()+total*1000;state="run";wake();timer=setInterval(tick,200);render()}
+function tick(){left=(end-Date.now())/1000;if(left<=0){left=0;clearInterval(timer);timer=null;state="done";unwake();beep();render();if(S.auto){setTimeout(function(){if(state==="done")start(nextIdx())},1200)}return}render()}
+function pause(){clearInterval(timer);timer=null;state="paused";unwake();render()}
+function resume(){audio();end=Date.now()+left*1000;state="run";wake();timer=setInterval(tick,200);render()}
+function reset(){clearInterval(timer);timer=null;cur=-1;state="idle";total=0;left=0;unwake();render()}
+$("go").onclick=function(){if(state==="idle")start(0);else if(state==="run")pause();else if(state==="paused")resume();else start(nextIdx())};
+$("skip").onclick=function(){start(state==="idle"?0:nextIdx())};
+$("reset").onclick=reset;
+function rows(){
+$("rows").innerHTML=S.steps.map(function(s,i){return '<div class="srow"><span class="n">'+(i+1)+'</span><span class="grow"></span><input type="number" inputmode="numeric" min="0" data-i="'+i+'" data-u="m" value="'+Math.floor(s/60)+'"><span class="u">min</span><input type="number" inputmode="numeric" min="0" max="59" data-i="'+i+'" data-u="s" value="'+(s%60)+'"><span class="u">sec</span>'+(S.steps.length>1?'<button class="del" data-d="'+i+'" aria-label="Remove">×</button>':'')+'</div>'}).join("");
+}
+$("rows").addEventListener("input",function(e){var t=e.target,i=+t.getAttribute("data-i");if(isNaN(i))return;var r=t.parentNode.querySelectorAll("input"),m=Math.max(0,parseInt(r[0].value)||0),s=Math.max(0,parseInt(r[1].value)||0);S.steps[i]=Math.max(1,m*60+s);save()});
+$("rows").addEventListener("click",function(e){var d=e.target.getAttribute("data-d");if(d!==null&&S.steps.length>1){S.steps.splice(+d,1);save();rows()}});
+$("add").onclick=function(){S.steps.push(30);save();rows()};
+["sound","vibe","auto"].forEach(function(k){$(k).checked=!!S[k];$(k).onchange=function(){S[k]=$(k).checked;save();if(k==="sound"&&S.sound)audio()}});
+$("gear").onclick=function(){setOpen=true;rows();$("sheet").classList.add("open");render()};
+$("close").onclick=function(){setOpen=false;$("sheet").classList.remove("open");reset()};
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&state==="run"){tick();wake()}});
+render();
+</script>
+</body>
+</html>
